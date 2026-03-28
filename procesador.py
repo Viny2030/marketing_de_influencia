@@ -1,22 +1,28 @@
 import pandas as pd
-from database import cargar_datos_sql
+import time
+from sqlalchemy import create_engine
 
-def procesar_y_subir_ventas(path_csv):
+# Configuración de conexión (Apunta al localhost porque corre desde Windows)
+DB_URL = "postgresql://user:password@localhost:5432/marketing_db"
+
+def inyectar_datos():
     try:
-        df = pd.read_csv(path_csv)
+        engine = create_engine(DB_URL)
         
-        # Limpieza básica: quitar nulos en Monto o Canal
+        # 1. Leer el CSV real
+        df = pd.read_csv('ventas.csv')
+        
+        # 2. Limpieza rápida
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
         df = df.dropna(subset=['Monto', 'Canal'])
         
-        # Convertir fecha a datetime
-        df['Fecha'] = pd.to_datetime(df['Fecha'])
+        # 3. Cargar a la tabla que espera la API
+        df.to_sql('ventas_reales', engine, if_exists='replace', index=False)
         
-        # Subir a Postgres
-        cargar_datos_sql(df, 'ventas_reales')
-        return df
+        print(f"✅ ¡Éxito! Se cargaron {len(df)} ventas a la base de datos.")
+        
     except Exception as e:
-        print(f"❌ Error al procesar CSV: {e}")
-        return None
+        print(f"❌ Error al inyectar datos: {e}")
 
 if __name__ == "__main__":
-    procesar_y_subir_ventas('ventas.csv')
+    inyectar_datos()
