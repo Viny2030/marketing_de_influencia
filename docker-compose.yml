@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   db:
     container_name: marketing_db
@@ -9,19 +10,28 @@ services:
       POSTGRES_DB: marketing_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   api:
+    container_name: marketing_api
     build: .
     command: uvicorn app:app --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     depends_on:
       - db
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/marketing_db
 
   dashboard:
+    container_name: marketing_dashboard
     build: .
     command: streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
     depends_on:
       - api
+
+volumes:
+  postgres_data:api
