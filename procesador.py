@@ -1,20 +1,22 @@
-import time
-import schedule # Necesitás: pip install schedule
-from procesador import calcular_y_guardar # Reutilizamos tu lógica anterior
+import pandas as pd
+from database import cargar_datos_sql
 
-def tarea_diaria():
-    print(f"🕒 [{datetime.now()}] Iniciando escaneo de canales...")
+def procesar_y_subir_ventas(path_csv):
     try:
-        calcular_y_guardar()
-        print("✅ Escaneo completado con éxito.")
+        df = pd.read_csv(path_csv)
+        
+        # Limpieza básica: quitar nulos en Monto o Canal
+        df = df.dropna(subset=['Monto', 'Canal'])
+        
+        # Convertir fecha a datetime
+        df['Fecha'] = pd.to_datetime(df['Fecha'])
+        
+        # Subir a Postgres
+        cargar_datos_sql(df, 'ventas_reales')
+        return df
     except Exception as e:
-        print(f"❌ Error en el escaneo: {e}")
+        print(f"❌ Error al procesar CSV: {e}")
+        return None
 
-# Programamos para que corra cada 1 hora
-schedule.every(1).hours.do(tarea_diaria)
-
-print("🚀 Scraper 24/7 Iniciado. No cierres esta terminal.")
-
-while True:
-    schedule.run_pending()
-    time.sleep(60) # Revisa cada minuto si hay tareas pendientes
+if __name__ == "__main__":
+    procesar_y_subir_ventas('ventas.csv')
