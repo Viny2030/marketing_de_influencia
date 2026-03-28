@@ -7,7 +7,7 @@ st.set_page_config(page_title="Marketing Dashboard", layout="wide")
 st.title("📊 Atribución de Ventas e Inversión")
 
 # Endpoint de tu FastAPI
-URL_API = "http://localhost:8000/api/v1/metrics"
+URL_API = "http://api:8000/api/v1/metrics"
 
 try:
     response = requests.get(URL_API)
