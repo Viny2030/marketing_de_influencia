@@ -2,66 +2,51 @@ import streamlit as st
 import requests
 import pandas as pd
 
-# Configuración de la página
-st.set_page_config(page_title="Marketing Attribution Pro", layout="wide")
+# 1. Configuración visual del Dashboard
+st.set_page_config(page_title="Marketing Attribution Dashboard", layout="wide")
 
-st.title("📊 Atribución de Ventas e Inversión")
-st.markdown("Visualización de datos en tiempo real desde la API")
+st.title("📊 Attribution Dashboard")
+st.markdown("Análisis de ingresos por campaña en tiempo real")
 
-# IMPORTANTE: Dentro de Docker, usamos el nombre del servicio 'api'
-# Si pruebas fuera de Docker, cambia 'api' por 'localhost'
+# 2. Configuración de la conexión
+# 'api' es el nombre del servicio en tu docker-compose.yml
 URL_API = "http://api:8000/report"
 
 try:
+    # Llamada a FastAPI
     response = requests.get(URL_API)
     
     if response.status_code == 200:
-        data = response.json()
+        res = response.json()
         
-        # Convertimos el diccionario de la API a DataFrame
-        # La API devuelve: {"campaña": valor, ...}
-        df = pd.DataFrame(list(data.items()), columns=['Campaña', 'Revenue'])
-        
-        # Si el DF no está vacío, calculamos métricas
-        if not df.empty:
-            # Métricas destacadas (KPIs)
-            c1, c2, c3 = st.columns(3)
+        if res:
+            # Transformamos el diccionario {campaña: valor} en un DataFrame
+            df = pd.DataFrame(list(res.items()), columns=['Campaña', 'Revenue'])
+            
+            # 3. Visualización de KPIs
+            col1, col2 = st.columns(2)
             total_revenue = df['Revenue'].sum()
-            mejor_campaña = df.loc[df['Revenue'].idxmax(), 'Campaña']
+            mejor_canal = df.loc[df['Revenue'].idxmax(), 'Campaña']
             
-            c1.metric("Revenue Total", f"${total_revenue:,.2f}")
-            c2.metric("Mejor Campaña", mejor_campaña)
-            c3.metric("Campañas Activas", len(df))
-
+            col1.metric("Revenue Total", f"${total_revenue:,.2f}")
+            col2.metric("Canal Ganador", mejor_canal)
+            
             st.divider()
-
-            # Gráficos
-            col_left, col_right = st.columns(2)
             
-            with col_left:
-                st.subheader("💰 Revenue por Campaña")
-                st.bar_chart(df.set_index('Campaña'))
+            # 4. Gráfico de barras
+            st.subheader("💰 Revenue por campaña")
+            st.bar_chart(df.set_index('Campaña'))
             
-            with col_right:
-                st.subheader("📈 Distribución de Ingresos")
-                # Gráfico circular simple usando st.write con los datos
-                st.write(df)
-
-            st.divider()
-            st.subheader("📋 Datos Detallados (API Response)")
-            st.dataframe(df.style.format({'Revenue': '${:,.2f}'}))
+            # 5. Tabla de datos detallada
+            st.subheader("Detalle de Conversión")
+            st.table(df.style.format({'Revenue': '${:,.2f}'}))
+            
         else:
-            st.info("La API respondió correctamente, pero no hay datos de conversiones aún.")
-
+            st.info("La API está online, pero no se encontraron datos. Asegúrate de ejecutar el procesador.")
+            
     else:
-        st.error(f"❌ Error en la API: Código {response.status_code}")
-        st.info("Asegúrate de haber inyectado datos con el procesador.")
+        st.error(f"Error al conectar con la API. Código de estado: {response.status_code}")
 
 except Exception as e:
-    st.error("⚠️ No se pudo conectar con el servidor FastAPI.")
-    st.info(f"Detalle técnico: {e}")
-    st.markdown("""
-    **Pasos de solución:**
-    1. Revisa que el contenedor `marketing_api` esté corriendo (`docker ps`).
-    2. Verifica que la URL en el código sea `http://api:8000/report`.
-    """)
+    st.error("⚠️ Error de conexión: No se pudo alcanzar la API.")
+    st.info("Verifica que el contenedor 'marketing_api' esté corriendo y que la URL sea 'http://api:8000/report'")
