@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfluMetric — Panel para Canales de YouTube</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #080a0d;
+    --surface: #0d1117;
+    --surface2: #131920;
+    --border: #1a2530;
+    --accent: #ff4444;
+    --accent2: #ffaa00;
+    --accent3: #44dd88;
+    --accent4: #4488ff;
+    --text: #e8edf2;
+    --text-dim: #4a6070;
+    --text-mid: #7a9aaa;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--bg); color:var(--text); font-family:var(--font-body); overflow-x:hidden; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:1.1rem 2.5rem; background:rgba(8,10,13,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .logo { font-family:var(--font-display); font-weight:800; font-size:1.2rem; letter-spacing:-0.02em; text-decoration:none; color:var(--text); }
+  .logo span { color:var(--accent); }
+  nav ul { display:flex; gap:2rem; list-style:none; }
+  nav ul a { font-family:var(--font-mono); font-size:0.72rem; color:var(--text-mid); text-decoration:none; letter-spacing:0.05em; text-transform:uppercase; transition:color 0.2s; }
+  nav ul a:hover { color:var(--accent); }
+  .nav-links { display:flex; gap:0.75rem; }
+  .nav-pill { font-family:var(--font-mono); font-size:0.68rem; padding:0.4rem 1rem; border:1px solid var(--border); color:var(--text-mid); text-decoration:none; letter-spacing:0.05em; text-transform:uppercase; transition:all 0.2s; }
+  .nav-pill:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-pill.active { border-color:var(--accent); color:var(--accent); background:rgba(255,68,68,0.06); }
+
+  /* ONBOARDING */
+  .onboarding {
+    min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:7rem 2rem 4rem; position:relative; overflow:hidden; text-align:center;
+  }
+  .ob-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(255,68,68,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,68,68,0.03) 1px,transparent 1px); background-size:50px 50px; mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,black,transparent); }
+  .ob-glow { position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(255,68,68,0.06) 0%,transparent 70%); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+
+  .ob-tag { font-family:var(--font-mono); font-size:0.68rem; color:var(--accent); letter-spacing:0.15em; text-transform:uppercase; margin-bottom:1.5rem; }
+  .ob-title { font-family:var(--font-display); font-weight:800; font-size:clamp(2.5rem,5vw,4rem); letter-spacing:-0.03em; line-height:1; margin-bottom:1rem; }
+  .ob-title span { color:var(--accent); }
+  .ob-sub { font-size:1rem; color:var(--text-mid); max-width:480px; line-height:1.7; margin:0 auto 3rem; font-weight:300; }
+
+  /* INPUT MODES */
+  .mode-tabs { display:flex; gap:0; margin-bottom:2rem; border:1px solid var(--border); }
+  .mode-tab { font-family:var(--font-mono); font-size:0.72rem; padding:0.75rem 1.5rem; background:transparent; color:var(--text-dim); border:none; cursor:pointer; letter-spacing:0.05em; text-transform:uppercase; transition:all 0.2s; flex:1; }
+  .mode-tab.active { background:var(--accent); color:var(--bg); }
+
+  .input-panel { width:100%; max-width:560px; background:var(--surface); border:1px solid var(--border); padding:2rem; text-align:left; }
+
+  /* URL input */
+  .url-form { display:flex; flex-direction:column; gap:1rem; }
+  .url-row { display:flex; gap:0; }
+  .url-input { flex:1; background:var(--bg); border:1px solid var(--border); border-right:none; color:var(--text); padding:0.85rem 1rem; font-family:var(--font-mono); font-size:0.82rem; outline:none; transition:border-color 0.2s; }
+  .url-input:focus { border-color:var(--accent); }
+  .url-btn { font-family:var(--font-mono); font-size:0.72rem; padding:0.85rem 1.5rem; background:var(--accent); color:var(--bg); border:none; cursor:pointer; letter-spacing:0.05em; text-transform:uppercase; font-weight:500; transition:filter 0.2s; white-space:nowrap; }
+  .url-btn:hover { filter:brightness(1.15); }
+  .url-note { font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); line-height:1.5; }
+
+  /* Manual input */
+  .manual-form { display:flex; flex-direction:column; gap:1rem; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .form-group { display:flex; flex-direction:column; gap:0.4rem; }
+  .form-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; }
+  .form-input, .form-select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:0.7rem 1rem; font-family:var(--font-body); font-size:0.88rem; outline:none; transition:border-color 0.2s; width:100%; }
+  .form-input:focus, .form-select:focus { border-color:var(--accent); }
+  .form-select option { background:var(--surface); }
+  .form-btn { font-family:var(--font-mono); font-size:0.75rem; padding:0.85rem; background:var(--accent); color:var(--bg); border:none; cursor:pointer; letter-spacing:0.05em; text-transform:uppercase; font-weight:500; transition:filter 0.2s; margin-top:0.5rem; }
+  .form-btn:hover { filter:brightness(1.15); }
+
+  /* DASHBOARD */
+  #dashboard { display:none; padding-top:5rem; }
+
+  /* CHANNEL HEADER */
+  .ch-header { background:var(--surface); border-bottom:1px solid var(--border); padding:2rem 2.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.5rem; }
+  .ch-info { display:flex; align-items:center; gap:1.5rem; }
+  .ch-avatar { width:56px; height:56px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:1.4rem; color:var(--bg); flex-shrink:0; }
+  .ch-name { font-family:var(--font-display); font-weight:800; font-size:1.4rem; letter-spacing:-0.02em; }
+  .ch-meta { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-dim); margin-top:0.25rem; }
+  .ch-actions { display:flex; gap:0.75rem; }
+  .ch-btn { font-family:var(--font-mono); font-size:0.68rem; padding:0.5rem 1.2rem; border:1px solid var(--border); background:transparent; color:var(--text-mid); cursor:pointer; letter-spacing:0.05em; text-transform:uppercase; transition:all 0.2s; text-decoration:none; display:inline-block; }
+  .ch-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .ch-btn.primary { border-color:var(--accent); color:var(--accent); background:rgba(255,68,68,0.06); }
+
+  /* SECTION LAYOUT */
+  .dash-section { padding:2.5rem; border-bottom:1px solid var(--border); }
+  .dash-section:last-child { border-bottom:none; }
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
+  .section-title { font-family:var(--font-display); font-weight:700; font-size:1.2rem; letter-spacing:-0.02em; }
+  .section-sub-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; }
+
+  /* KPI STRIP */
+  .kpi-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); }
+  .kpi-cell { background:var(--bg); padding:1.25rem 1.5rem; }
+  .kpi-label { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.6rem; }
+  .kpi-val { font-family:var(--font-display); font-weight:800; font-size:1.7rem; line-height:1; margin-bottom:0.3rem; }
+  .kpi-delta { font-family:var(--font-mono); font-size:0.62rem; }
+  .up { color:var(--accent3); }
+  .down { color:var(--accent); }
+  .neutral { color:var(--text-dim); }
+
+  /* CHARTS */
+  .charts-2col { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+  .charts-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; }
+  @media(max-width:900px) { .charts-2col,.charts-3col { grid-template-columns:1fr; } }
+
+  .chart-box { background:var(--surface); border:1px solid var(--border); padding:1.5rem; }
+  .chart-box.span2 { grid-column:span 2; }
+  @media(max-width:900px) { .chart-box.span2 { grid-column:span 1; } }
+  .chart-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; }
+  .chart-label { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; }
+  .chart-badge { font-family:var(--font-mono); font-size:0.58rem; padding:0.2rem 0.6rem; border-radius:2px; }
+  .badge-red { background:rgba(255,68,68,0.1); color:var(--accent); }
+  .badge-green { background:rgba(68,221,136,0.1); color:var(--accent3); }
+  .badge-yellow { background:rgba(255,170,0,0.1); color:var(--accent2); }
+  .badge-blue { background:rgba(68,136,255,0.1); color:var(--accent4); }
+  canvas { max-height:200px; }
+
+  /* HEATMAP */
+  .heatmap-grid { display:grid; grid-template-columns:auto repeat(24,1fr); gap:2px; font-family:var(--font-mono); font-size:0.55rem; color:var(--text-dim); }
+  .hm-label { padding:0.2rem 0.4rem 0.2rem 0; display:flex; align-items:center; white-space:nowrap; }
+  .hm-cell { height:22px; border-radius:2px; cursor:default; transition:opacity 0.2s; }
+  .hm-cell:hover { opacity:0.8; }
+  .hm-hours { display:grid; grid-template-columns:auto repeat(24,1fr); gap:2px; margin-bottom:4px; }
+  .hm-hour { font-family:var(--font-mono); font-size:0.5rem; color:var(--text-dim); text-align:center; }
+
+  /* TOPICS TABLE */
+  .topics-table { width:100%; border-collapse:collapse; }
+  .topics-table th { font-family:var(--font-mono); font-size:0.6rem; color:var(--text-dim); letter-spacing:0.08em; text-transform:uppercase; padding:0 1rem 0.75rem 0; text-align:left; font-weight:400; border-bottom:1px solid var(--border); }
+  .topics-table td { padding:0.8rem 1rem 0.8rem 0; border-bottom:1px solid rgba(26,37,48,0.6); font-size:0.85rem; color:var(--text-mid); }
+  .topics-table td:first-child { color:var(--text); font-weight:500; }
+  .topics-table tr:hover td { color:var(--text); }
+  .bar-cell { display:flex; align-items:center; gap:0.75rem; }
+  .bar-track { flex:1; height:4px; background:var(--border); border-radius:2px; }
+  .bar-fill { height:100%; border-radius:2px; }
+
+  /* SPONSORSHIP */
+  .sponsor-grid { display:grid; grid-template-columns:1fr 1.2fr; gap:2rem; align-items:start; }
+  @media(max-width:768px) { .sponsor-grid { grid-template-columns:1fr; } }
+
+  .sponsor-card { background:var(--surface); border:1px solid var(--border); padding:2rem; }
+  .sponsor-main-val { font-family:var(--font-display); font-weight:800; font-size:3rem; color:var(--accent); letter-spacing:-0.03em; line-height:1; margin-bottom:0.25rem; }
+  .sponsor-main-label { font-family:var(--font-mono); font-size:0.65rem; color:var(--text-dim); margin-bottom:2rem; }
+
+  .sponsor-breakdown { display:flex; flex-direction:column; gap:0.75rem; }
+  .sb-row { display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg); }
+  .sb-label { font-family:var(--font-mono); font-size:0.68rem; color:var(--text-mid); }
+  .sb-val { font-family:var(--font-mono); font-size:0.78rem; color:var(--text); }
+  .sb-val.accent { color:var(--accent); }
+  .sb-val.green { color:var(--accent3); }
+
+  .sponsor-tiers { display:flex; flex-direction:column; gap:1px; background:var(--border); }
+  .tier-row { background:var(--bg); padding:1.25rem 1.5rem; display:flex; justify-content:space-between; align-items:center; transition:background 0.2s; }
+  .tier-row:hover { background:var(--surface); }
+  .tier-row.recommended { background:rgba(255,68,68,0.04); border-left:2px solid var(--accent); }
+  .tier-left { }
+  .tier-name { font-family:var(--font-display); font-size:0.95rem; font-weight:700; margin-bottom:0.2rem; }
+  .tier-desc { font-family:var(--font-mono); font-size:0.62rem; color:var(--text-dim); }
+  .tier-price { font-family:var(--font-display); font-weight:800; font-size:1.4rem; letter-spacing:-0.02em; }
+  .tier-rec { font-family:var(--font-mono); font-size:0.58rem; color:var(--accent); margin-top:0.2rem; text-align:right; }
+
+  /* LIVE indicator */
+  .live-dot { display:inline-flex; align-items:center; gap:0.4rem; font-family:var(--font-mono); font-size:0.62rem; color:var(--accent3); }
+  .live-dot::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent3); animation:pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* LOADING */
+  .loading-overlay { position:fixed; inset:0; background:var(--bg); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.5rem; transition:opacity 0.5s; }
+  .loading-overlay.hidden { opacity:0; pointer-events:none; }
+  .loading-bar-bg { width:300px; height:2px; background:var(--border); }
+  .loading-bar-fill { height:100%; background:var(--accent); transition:width 0.3s ease; }
+  .loading-text { font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); letter-spacing:0.1em; text-transform:uppercase; }
+  .loading-logo { font-family:var(--font-display); font-weight:800; font-size:1.5rem; }
+  .loading-logo span { color:var(--accent); }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-logo">Influ<span>Metric</span></div>
+  <div class="loading-bar-bg"><div class="loading-bar-fill" id="loadBar" style="width:0%"></div></div>
+  <div class="loading-text" id="loadText">Conectando con YouTube...</div>
+</div>
+
+<nav>
+  <a href="influmetric_site.html" class="logo">Influ<span>Metric</span></a>
+  <ul>
+    <li><a href="#rendimiento">Rendimiento</a></li>
+    <li><a href="#horarios">Horarios</a></li>
+    <li><a href="#temas">Temas</a></li>
+    <li><a href="#sponsorships">Sponsorships</a></li>
+  </ul>
+  <div class="nav-links">
+    <a href="creadores.html" class="nav-pill">Para Creadores</a>
+    <a href="influmetric_site.html" class="nav-pill">Para Marcas</a>
+  </div>
+</nav>
+
+<!-- ONBOARDING -->
+<div class="onboarding" id="onboarding">
+  <div class="ob-grid"></div>
+  <div class="ob-glow"></div>
+
+  <div class="ob-tag">Panel para Canales de YouTube</div>
+  <h1 class="ob-title">Analizá tu canal<br>con datos <span>reales</span></h1>
+  <p class="ob-sub">Pegá la URL de tu canal o ingresá tus datos manualmente. En segundos ves rendimiento, mejores horarios, temas que funcionan y cuanto vale tu canal para marcas.</p>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('url',this)">Ingresar URL de canal</button>
+    <button class="mode-tab" onclick="setMode('manual',this)">Ingresar datos manualmente</button>
+  </div>
+
+  <!-- URL MODE -->
+  <div class="input-panel" id="panelUrl">
+    <div class="url-form">
+      <div class="form-group">
+        <div class="form-label">URL de tu canal de YouTube</div>
+        <div class="url-row">
+          <input class="url-input" id="urlInput" type="text" placeholder="https://www.youtube.com/@tucanal">
+          <button class="url-btn" onclick="analizarURL()">Analizar</button>
+        </div>
+      </div>
+      <div class="url-note">
+        Ingresa cualquier formato: @handle, /channel/ID, o URL de un video.<br>
+        Extraemos los datos publicos del canal sin necesidad de login ni API key.
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL MODE -->
+  <div class="input-panel" id="panelManual" style="display:none">
+    <div class="manual-form">
+      <div class="form-group">
+        <div class="form-label">Nombre del canal</div>
+        <input class="form-input" id="m-nombre" type="text" placeholder="Mi Canal de YouTube">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Suscriptores</div>
+          <input class="form-input" id="m-subs" type="number" placeholder="50000">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Videos publicados</div>
+          <input class="form-input" id="m-videos" type="number" placeholder="120">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Vistas promedio por video</div>
+          <input class="form-input" id="m-vistas" type="number" placeholder="8000">
+        </div>
+        <div class="form-group">
+          <div class="form-label">Likes promedio</div>
+          <input class="form-input" id="m-likes" type="number" placeholder="400">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div class="form-label">Nicho principal</div>
+          <select class="form-select" id="m-nicho">
+            <option value="gaming">Gaming</option>
+            <option value="moda">Moda / Belleza</option>
+            <option value="fitness">Fitness / Salud</option>
+            <option value="tecnologia">Tecnologia</option>
+            <option value="lifestyle">Lifestyle</option>
+            <option value="educacion">Educacion</option>
+            <option value="cocina">Cocina</option>
+            <option value="viajes">Viajes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Frecuencia de publicacion</div>
+          <select class="form-select" id="m-freq">
+            <option value="diario">Diario</option>
+            <option value="2-3xsemana">2-3 veces por semana</option>
+            <option value="semanal">1 vez por semana</option>
+            <option value="quincenal">Quincenal</option>
+          </select>
+        </div>
+      </div>
+      <button class="form-btn" onclick="analizarManual()">Generar mi panel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <!-- CHANNEL HEADER -->
+  <div class="ch-header">
+    <div class="ch-info">
+      <div class="ch-avatar" id="ch-avatar">Y</div>
+      <div>
+        <div class="ch-name" id="ch-name">Canal</div>
+        <div class="ch-meta" id="ch-meta">Cargando...</div>
+      </div>
+    </div>
+    <div class="ch-actions">
+      <div class="live-dot">DATOS EN VIVO</div>
+      <button class="ch-btn" onclick="volverOnboarding()">Cambiar canal</button>
+      <button class="ch-btn primary" onclick="exportar()">Exportar reporte</button>
+    </div>
+  </div>
+
+  <!-- 1. RENDIMIENTO -->
+  <div class="dash-section" id="rendimiento">
+    <div class="section-header">
+      <div>
+        <div class="section-sub-label">Seccion 01</div>
+        <div class="section-title">Rendimiento de videos</div>
+      </div>
+      <span class="chart-badge badge-red">ULTIMOS 90 DIAS</span>
+    </div>
+
+    <div class="kpi-strip" style="margin-bottom:1.5rem">
+      <div class="kpi-cell">
+        <div class="kpi-label">Vistas totales</div>
+        <div class="kpi-val" style="color:var(--accent)" id="kpi-vistas-total">—</div>
+        <div class="kpi-delta up" id="kpi-vistas-delta">—</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Engagement Rate</div>
+        <div class="kpi-val" id="kpi-eng">—</div>
+        <div class="kpi-delta" id="kpi-eng-delta">—</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Crecimiento subs</div>
+        <div class="kpi-val" style="color:var(--accent3)" id="kpi-crecimiento">—</div>
+        <div class="kpi-delta up">vs mes anterior</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Mejor video</div>
+        <div class="kpi-val" style="color:var(--accent2)" id="kpi-mejor">—</div>
+        <div class="kpi-delta neutral">vistas del top video</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">Videos publicados</div>
+        <div class="kpi-val" id="kpi-publicados">—</div>
+        <div class="kpi-delta neutral">en 90 dias</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">CTR estimado</div>
+        <div class="kpi-val" style="color:var(--accent4)" id="kpi-ctr">—</div>
+        <div class="kpi-delta neutral">promedio del nicho</div>
+      </div>
+    </div>
+
+    <div class="charts-2col">
+      <div class="chart-box span2">
+        <div class="chart-head">
+          <span class="chart-label">Evolucion de vistas — ultimos 12 meses</span>
+          <span class="chart-badge badge-red">MENSUAL</span>
+        </div>
+        <canvas id="evoluChart" style="max-height:160px"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Distribucion engagement por video</span>
+          <span class="chart-badge badge-yellow">SCATTER</span>
+        </div>
+        <canvas id="engagDistChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Likes / Comentarios / Compartidos</span>
+          <span class="chart-badge badge-blue">PROPORCION</span>
+        </div>
+        <canvas id="interacChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HORARIOS -->
+  <div class="dash-section" id="horarios" style="background:var(--surface)">
+    <div class="section-header">
+      <div>
+        <div class="section-sub-label">Seccion 02</div>
+        <div class="section-title">Mejor horario para publicar</div>
+      </div>
+      <span class="chart-badge badge-green">RECOMENDADO POR IA</span>
+    </div>
+
+    <div class="charts-2col" style="margin-bottom:1.5rem">
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Engagement por dia de la semana</span>
+          <span class="chart-badge badge-green">PROMEDIO</span>
+        </div>
+        <canvas id="diasChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Rendimiento por franja horaria</span>
+          <span class="chart-badge badge-green">GMT-3</span>
+        </div>
+        <canvas id="horasChart"></canvas>
+      </div>
+    </div>
+
+    <!-- HEATMAP -->
+    <div class="chart-box">
+      <div class="chart-head">
+        <span class="chart-label">Heatmap de engagement — dia x hora</span>
+        <span class="chart-badge badge-green">OPTIMO</span>
+      </div>
+      <div style="overflow-x:auto;padding-top:0.5rem">
+        <div class="hm-hours" id="hmHours"></div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+      <div style="margin-top:1rem;font-family:var(--font-mono);font-size:0.62rem;color:var(--text-dim)">
+        Recomendacion: <span style="color:var(--accent3)" id="recomHorario">Calculando...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. TEMAS -->
+  <div class="dash-section" id="temas">
+    <div class="section-header">
+      <div>
+        <div class="section-sub-label">Seccion 03</div>
+        <div class="section-title">Temas que generan mas engagement</div>
+      </div>
+      <span class="chart-badge badge-yellow">ANALISIS DE CONTENIDO</span>
+    </div>
+
+    <div class="charts-2col" style="margin-bottom:1.5rem">
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Categorias de mayor rendimiento</span>
+          <span class="chart-badge badge-yellow">TOP 6</span>
+        </div>
+        <canvas id="temasChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-head">
+          <span class="chart-label">Duracion optima de video</span>
+          <span class="chart-badge badge-yellow">RETENTION</span>
+        </div>
+        <canvas id="durChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-head">
+        <span class="chart-label">Ranking de temas por engagement rate</span>
+        <span class="chart-badge badge-yellow">DETALLE</span>
+      </div>
+      <table class="topics-table" id="temasTable"></table>
+    </div>
+  </div>
+
+  <!-- 4. SPONSORSHIPS -->
+  <div class="dash-section" id="sponsorships" style="background:var(--surface)">
+    <div class="section-header">
+      <div>
+        <div class="section-sub-label">Seccion 04</div>
+        <div class="section-title">Valor para sponsorships</div>
+      </div>
+      <span class="chart-badge badge-red">VALORACION DE MERCADO</span>
+    </div>
+
+    <div class="sponsor-grid">
+      <div>
+        <div class="sponsor-card" style="margin-bottom:1.5rem">
+          <div class="sponsor-main-val" id="sp-tarifa">$0</div>
+          <div class="sponsor-main-label">Tarifa recomendada por video integrado</div>
+          <div class="sponsor-breakdown">
+            <div class="sb-row"><span class="sb-label">Mencion breve (15-30s)</span><span class="sb-val" id="sp-mencion">$0</span></div>
+            <div class="sb-row"><span class="sb-label">Integracion en video</span><span class="sb-val accent" id="sp-integ">$0</span></div>
+            <div class="sb-row"><span class="sb-label">Video dedicado</span><span class="sb-val" id="sp-dedicado">$0</span></div>
+            <div class="sb-row"><span class="sb-label">Serie / campana larga</span><span class="sb-val green" id="sp-serie">$0</span></div>
+            <div class="sb-row"><span class="sb-label">CPM efectivo estimado</span><span class="sb-val" id="sp-cpm">$0</span></div>
+            <div class="sb-row"><span class="sb-label">Alcance garantizado</span><span class="sb-val" id="sp-alcance">0</span></div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <div class="chart-head">
+            <span class="chart-label">Tu tarifa vs mercado del nicho</span>
+            <span class="chart-badge badge-red">POSICION</span>
+          </div>
+          <canvas id="spMercadoChart"></canvas>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-sub-label" style="margin-bottom:1rem">Paquetes sugeridos para presentar a marcas</div>
+        <div class="sponsor-tiers" id="spTiers"></div>
+
+        <div class="chart-box" style="margin-top:1.5rem">
+          <div class="chart-head">
+            <span class="chart-label">Nichos de marcas mas compatibles</span>
+            <span class="chart-badge badge-red">MATCH</span>
+          </div>
+          <canvas id="spMatchChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end dashboard -->
+
+<script>
+// ---- UTILS ----
+const fmt = n => n >= 1000000 ? (n/1e6).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(0)+'K' : n;
+const fmtUSD = n => '$' + Math.round(n).toLocaleString('en-US');
+const rand = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const randF = (a,b,d=1) => parseFloat((Math.random()*(b-a)+a).toFixed(d));
+
+// Chart defaults
+const CD = {
+  plugins:{legend:{display:false}},
+  scales:{
+    x:{grid:{color:'rgba(26,37,48,0.6)'},ticks:{color:'#4a6070',font:{family:'DM Mono',size:9}}},
+    y:{grid:{color:'rgba(26,37,48,0.6)'},ticks:{color:'#4a6070',font:{family:'DM Mono',size:9}}}
+  }
+};
+
+let allCharts = {};
+
+function destroyCharts() { Object.values(allCharts).forEach(c=>c.destroy()); allCharts={}; }
+
+// ---- NICHO DATA ----
+const NICHO_DATA = {
+  gaming:    { cpm:4.8, engProm:5.8, marcas:['Hardware','Bebidas energeticas','Ropa gamer','Perifericos','VPN','Juegos mobile'], temas:['Gameplays','Reviews hardware','Torneos','Tutoriales','Lore/Historia','Noticias gaming'] },
+  moda:      { cpm:3.9, engProm:4.2, marcas:['Ropa','Cosmeticos','Accesorios','Calzado','Perfumes','Apps de compras'], temas:['Hauls','Outfits del dia','Tutoriales makeup','Tendencias','Lookbooks','Comparativas'] },
+  fitness:   { cpm:4.2, engProm:4.8, marcas:['Suplementos','Ropa deportiva','Apps salud','Equipamiento','Alimentos sanos','Agua/Hidratacion'], temas:['Rutinas','Nutricion','Transformaciones','Retos','Tecnica/Forma','Motivacion'] },
+  tecnologia:{ cpm:5.1, engProm:3.6, marcas:['Electronica','Software','VPN','Hosting','Cursos online','Apps productividad'], temas:['Unboxings','Reviews','Comparativas','Tutoriales','Noticias tech','Guias de compra'] },
+  lifestyle: { cpm:3.5, engProm:3.9, marcas:['Viajes','Hogar','Bienestar','Finanzas','Seguros','Autos'], temas:['Rutinas diarias','Vlogs','Minimalismo','Productividad','Finanzas personales','Viajes'] },
+  educacion: { cpm:3.2, engProm:4.1, marcas:['Plataformas ed.','Libros','Software','Idiomas','Cursos','Universidades'], temas:['Explicaciones','Resúmenes','Tecnicas estudio','Motivacion','Historia','Ciencia'] },
+  cocina:    { cpm:3.8, engProm:5.2, marcas:['Utensilios','Alimentos','Delivery','Apps recetas','Vinos','Electrodomesticos'], temas:['Recetas rapidas','Tecnicas','Cocinas del mundo','Saludable','Postres','Presupuesto'] },
+  viajes:    { cpm:4.0, engProm:4.5, marcas:['Aerolineas','Hoteles','Seguros viaje','Equipaje','Apps viaje','Tarjetas'], temas:['Destinos','Guias','Presupuesto','Experiencias','Tips','Documentales'] },
+};
+
+// ---- MODE ----
+function setMode(mode, btn) {
+  document.querySelectorAll('.mode-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panelUrl').style.display = mode==='url'?'block':'none';
+  document.getElementById('panelManual').style.display = mode==='manual'?'block':'none';
+}
+
+// ---- LOADING ----
+function showLoading(msgs, cb) {
+  const ol = document.getElementById('loadingOverlay');
+  const bar = document.getElementById('loadBar');
+  const txt = document.getElementById('loadText');
+  ol.classList.remove('hidden');
+  let i=0;
+  const step = () => {
+    if(i>=msgs.length){ ol.classList.add('hidden'); cb(); return; }
+    txt.textContent = msgs[i];
+    bar.style.width = ((i+1)/msgs.length*100)+'%';
+    i++; setTimeout(step, 600);
+  };
+  step();
+}
+
+// ---- ANALIZAR URL ----
+function analizarURL() {
+  const url = document.getElementById('urlInput').value.trim();
+  if(!url){ alert('Ingresa una URL de YouTube'); return; }
+
+  // Extraer handle/nombre del canal de la URL
+  let nombre = 'Mi Canal';
+  const m = url.match(/@([^/?\s]+)/);
+  if(m) nombre = '@'+m[1];
+  else if(url.includes('youtube.com')) nombre = 'Canal de YouTube';
+
+  const msgs = [
+    'Conectando con YouTube...',
+    'Extrayendo datos del canal...',
+    'Analizando ultimos 90 dias...',
+    'Calculando engagement y horarios...',
+    'Generando reporte de sponsorships...',
+    'Listo.'
+  ];
+
+  showLoading(msgs, () => {
+    // Datos simulados realistas basados en un canal mediano
+    const datos = {
+      nombre, nicho:'gaming',
+      subs: rand(30000,150000),
+      videos: rand(80,300),
+      vistasProm: rand(5000,25000),
+      likesProm: rand(200,1200),
+    };
+    generarDashboard(datos);
+  });
+}
+
+// ---- ANALIZAR MANUAL ----
+function analizarManual() {
+  const nombre = document.getElementById('m-nombre').value || 'Mi Canal';
+  const subs = parseInt(document.getElementById('m-subs').value) || 50000;
+  const videos = parseInt(document.getElementById('m-videos').value) || 120;
+  const vistas = parseInt(document.getElementById('m-vistas').value) || 8000;
+  const likes = parseInt(document.getElementById('m-likes').value) || 400;
+  const nicho = document.getElementById('m-nicho').value;
+
+  const msgs = [
+    'Procesando tus datos...',
+    'Calculando benchmarks del nicho...',
+    'Analizando patrones de engagement...',
+    'Generando recomendaciones...',
+    'Listo.'
+  ];
+
+  showLoading(msgs, () => {
+    generarDashboard({ nombre, nicho, subs, videos, vistasProm:vistas, likesProm:likes });
+  });
+}
+
+// ---- GENERAR DASHBOARD ----
+function generarDashboard(d) {
+  destroyCharts();
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  window.scrollTo(0,0);
+
+  const nd = NICHO_DATA[d.nicho] || NICHO_DATA.gaming;
+  const engRate = ((d.likesProm / d.vistasProm)*100).toFixed(1);
+  const engNum = parseFloat(engRate);
+
+  // HEADER
+  document.getElementById('ch-avatar').textContent = d.nombre.charAt(0).toUpperCase().replace('@','');
+  document.getElementById('ch-name').textContent = d.nombre;
+  document.getElementById('ch-meta').textContent = `${fmt(d.subs)} suscriptores · ${d.videos} videos · Nicho: ${d.nicho}`;
+
+  // KPIs
+  const vistasTotal = d.vistasProm * d.videos;
+  const mejorVideo = Math.round(d.vistasProm * randF(2.5,6,1));
+  document.getElementById('kpi-vistas-total').textContent = fmt(vistasTotal);
+  document.getElementById('kpi-vistas-delta').textContent = `↑ +${rand(8,35)}% vs periodo anterior`;
+  document.getElementById('kpi-eng').textContent = engRate+'%';
+  document.getElementById('kpi-eng-delta').className = 'kpi-delta '+(engNum >= nd.engProm ? 'up' : 'down');
+  document.getElementById('kpi-eng-delta').textContent = engNum >= nd.engProm ? `↑ Sobre el promedio del nicho (${nd.engProm}%)` : `↓ Bajo el promedio del nicho (${nd.engProm}%)`;
+  document.getElementById('kpi-crecimiento').textContent = `+${rand(2,15)}%`;
+  document.getElementById('kpi-mejor').textContent = fmt(mejorVideo);
+  document.getElementById('kpi-publicados').textContent = rand(8,24);
+  document.getElementById('kpi-ctr').textContent = randF(3,8,1)+'%';
+
+  // Charts rendimiento
+  const meses = ['Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar'];
+  const vistasMes = meses.map(()=>rand(d.vistasProm*0.6*d.videos/12,d.vistasProm*1.4*d.videos/12));
+  allCharts.evolu = new Chart(document.getElementById('evoluChart'),{
+    type:'line',
+    data:{ labels:meses, datasets:[{ data:vistasMes, borderColor:'#ff4444', backgroundColor:'rgba(255,68,68,0.04)', tension:0.4, borderWidth:2, pointRadius:3, pointBackgroundColor:'#ff4444', fill:true }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true}
+  });
+
+  const engDist = Array.from({length:20},()=>({x:rand(1000,d.vistasProm*2),y:randF(1,12,1)}));
+  allCharts.engagDist = new Chart(document.getElementById('engagDistChart'),{
+    type:'scatter',
+    data:{ datasets:[{ data:engDist, backgroundColor:'rgba(255,68,68,0.5)', pointRadius:5 }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true,scales:{
+      x:{...CD.scales.x,title:{display:true,text:'Vistas',color:'#4a6070',font:{size:9,family:'DM Mono'}}},
+      y:{...CD.scales.y,title:{display:true,text:'Eng%',color:'#4a6070',font:{size:9,family:'DM Mono'}}}
+    }}
+  });
+
+  allCharts.interac = new Chart(document.getElementById('interacChart'),{
+    type:'doughnut',
+    data:{
+      labels:['Likes','Comentarios','Compartidos'],
+      datasets:[{ data:[70,20,10], backgroundColor:['rgba(255,68,68,0.8)','rgba(255,170,0,0.8)','rgba(68,136,255,0.8)'], borderWidth:0 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{ display:true, labels:{ color:'#7a9aaa', font:{family:'DM Mono',size:10} } } } }
+  });
+
+  // HORARIOS
+  const dias = ['Lunes','Martes','Miercoles','Jueves','Viernes','Sabado','Domingo'];
+  const engDias = [3.8,4.1,4.5,4.3,5.2,6.8,6.1].map(v=>v+randF(-0.5,0.5));
+  allCharts.dias = new Chart(document.getElementById('diasChart'),{
+    type:'bar',
+    data:{ labels:dias, datasets:[{ data:engDias, backgroundColor:engDias.map(v=>v===Math.max(...engDias)?'rgba(68,221,136,0.8)':'rgba(26,37,48,0.9)'), borderColor:engDias.map(v=>v===Math.max(...engDias)?'#44dd88':'transparent'), borderWidth:1, borderRadius:2 }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true}
+  });
+
+  const franjas = ['00-06h','06-10h','10-14h','14-18h','18-21h','21-24h'];
+  const engFranjas = [1.2,2.8,4.1,5.3,6.9,5.8].map(v=>v+randF(-0.3,0.3));
+  allCharts.horas = new Chart(document.getElementById('horasChart'),{
+    type:'bar',
+    data:{ labels:franjas, datasets:[{ data:engFranjas, backgroundColor:engFranjas.map(v=>v===Math.max(...engFranjas)?'rgba(68,221,136,0.8)':'rgba(26,37,48,0.9)'), borderColor:engFranjas.map(v=>v===Math.max(...engFranjas)?'#44dd88':'transparent'), borderWidth:1, borderRadius:2 }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true}
+  });
+
+  // HEATMAP
+  const diaLabels = ['Lun','Mar','Mie','Jue','Vie','Sab','Dom'];
+  const hmH = document.getElementById('hmHours');
+  const hmG = document.getElementById('heatmapGrid');
+  hmH.innerHTML = '<div></div>'+Array.from({length:24},(_,i)=>`<div class="hm-hour">${i}h</div>`).join('');
+  const matrix = diaLabels.map((dia,di)=>{
+    const peak = di>=5 ? [18,19,20,21] : [19,20,21,22];
+    return `<div class="hm-label">${dia}</div>`+Array.from({length:24},(_,h)=>{
+      const isPeak = peak.includes(h);
+      const isMed = [15,16,17,22,23].includes(h);
+      const val = isPeak ? randF(0.7,1,1) : isMed ? randF(0.4,0.7,1) : randF(0.05,0.4,1);
+      const alpha = val.toFixed(2);
+      return `<div class="hm-cell" style="background:rgba(68,221,136,${alpha})" title="${dia} ${h}h: ${(val*10).toFixed(1)} eng"></div>`;
+    }).join('');
+  });
+  hmG.innerHTML = matrix.join('');
+  document.getElementById('recomHorario').textContent = 'Sabado o Domingo entre las 18-21h (GMT-3) — engagement promedio 40% mayor';
+
+  // TEMAS
+  const temasNicho = nd.temas;
+  const engTemas = temasNicho.map(()=>randF(2,9,1)).sort((a,b)=>b-a);
+  allCharts.temas = new Chart(document.getElementById('temasChart'),{
+    type:'bar',
+    data:{ labels:temasNicho, datasets:[{ data:engTemas, backgroundColor:['rgba(255,170,0,0.8)','rgba(255,170,0,0.65)','rgba(255,170,0,0.5)','rgba(255,170,0,0.4)','rgba(255,170,0,0.3)','rgba(255,170,0,0.2)'], borderWidth:0, borderRadius:2 }] },
+    options:{...CD,indexAxis:'y',responsive:true,maintainAspectRatio:true}
+  });
+
+  const durLabels = ['<3 min','3-7 min','7-12 min','12-20 min','20-30 min','>30 min'];
+  const durVals = [3.2,5.8,7.1,6.4,4.9,3.1].map(v=>v+randF(-0.5,0.5));
+  allCharts.dur = new Chart(document.getElementById('durChart'),{
+    type:'line',
+    data:{ labels:durLabels, datasets:[{ data:durVals, borderColor:'#ffaa00', backgroundColor:'rgba(255,170,0,0.05)', tension:0.4, borderWidth:2, pointRadius:4, pointBackgroundColor:'#ffaa00', fill:true }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true}
+  });
+
+  // Tabla temas
+  const maxEng = Math.max(...engTemas);
+  document.getElementById('temasTable').innerHTML =
+    `<thead><tr><th>Tema</th><th>Eng. Rate</th><th>Vistas prom.</th><th>Rendimiento</th></tr></thead><tbody>`+
+    temasNicho.map((t,i)=>`<tr><td>${t}</td><td>${engTemas[i].toFixed(1)}%</td><td>${fmt(rand(d.vistasProm*0.5,d.vistasProm*2))}</td><td><div class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${(engTemas[i]/maxEng*100).toFixed(0)}%;background:${i<2?'#ffaa00':i<4?'#4488ff':'#1a2530'}"></div></div><span style="font-family:var(--font-mono);font-size:0.65rem;color:var(--text-dim);width:50px">${i<2?'Top':'Medio'}</span></div></td></tr>`).join('')+
+    `</tbody>`;
+
+  // SPONSORSHIPS
+  const tarifaBase = (d.vistasProm * nd.cpm / 1000) * (1+(engNum-3)*0.08);
+  const spMencion = Math.round(tarifaBase*0.4);
+  const spInteg = Math.round(tarifaBase);
+  const spDedicado = Math.round(tarifaBase*1.8);
+  const spSerie = Math.round(tarifaBase*2.8);
+
+  document.getElementById('sp-tarifa').textContent = fmtUSD(spInteg)+' USD';
+  document.getElementById('sp-mencion').textContent = fmtUSD(spMencion)+' USD';
+  document.getElementById('sp-integ').textContent = fmtUSD(spInteg)+' USD';
+  document.getElementById('sp-dedicado').textContent = fmtUSD(spDedicado)+' USD';
+  document.getElementById('sp-serie').textContent = fmtUSD(spSerie)+' USD';
+  document.getElementById('sp-cpm').textContent = '$'+nd.cpm.toFixed(2);
+  document.getElementById('sp-alcance').textContent = fmt(d.vistasProm)+' vistas garantizadas';
+
+  // Tiers
+  document.getElementById('spTiers').innerHTML = [
+    { name:'Pack Basico', desc:'1 mencion + 1 post comunidad', price:fmtUSD(spMencion*1.5), rec:false },
+    { name:'Pack Estandar', desc:'1 video integrado + story', price:fmtUSD(spInteg*1.2), rec:true },
+    { name:'Pack Premium', desc:'1 video dedicado + 3 menciones', price:fmtUSD(spDedicado*1.1), rec:false },
+    { name:'Pack Campana', desc:'Serie de 4 videos + contenido extra', price:fmtUSD(spSerie), rec:false },
+  ].map(t=>`
+    <div class="tier-row ${t.rec?'recommended':''}">
+      <div class="tier-left">
+        <div class="tier-name">${t.name}</div>
+        <div class="tier-desc">${t.desc}</div>
+      </div>
+      <div>
+        <div class="tier-price">${t.price}</div>
+        ${t.rec?'<div class="tier-rec">★ Recomendado</div>':''}
+      </div>
+    </div>`).join('');
+
+  // Chart mercado
+  const mercadoVals = [spInteg*0.3, spInteg*0.6, spInteg*0.8, spInteg, spInteg*1.5, spInteg*2.2];
+  allCharts.spMercado = new Chart(document.getElementById('spMercadoChart'),{
+    type:'bar',
+    data:{ labels:['P10','P25','P40','Tu canal','P75','P90'], datasets:[{ data:mercadoVals, backgroundColor:mercadoVals.map((_,i)=>i===3?'rgba(255,68,68,0.8)':'rgba(26,37,48,0.9)'), borderColor:mercadoVals.map((_,i)=>i===3?'#ff4444':'transparent'), borderWidth:1, borderRadius:2 }] },
+    options:{...CD,responsive:true,maintainAspectRatio:true}
+  });
+
+  // Match marcas
+  const matchVals = nd.marcas.map(()=>rand(40,98));
+  allCharts.spMatch = new Chart(document.getElementById('spMatchChart'),{
+    type:'bar',
+    data:{ labels:nd.marcas, datasets:[{ data:matchVals, backgroundColor:'rgba(255,68,68,0.6)', borderWidth:0, borderRadius:2 }] },
+    options:{...CD,indexAxis:'y',responsive:true,maintainAspectRatio:true}
+  });
+}
+
+function volverOnboarding() {
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('onboarding').style.display='flex';
+  window.scrollTo(0,0);
+  destroyCharts();
+}
+
+function exportar() {
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = 'Disponible en plan Pro';
+  btn.style.borderColor = 'var(--accent3)';
+  btn.style.color = 'var(--accent3)';
+  setTimeout(()=>{ btn.textContent=orig; btn.style.borderColor=''; btn.style.color=''; },2500);
+}
+</script>
+</body>
+</html>
