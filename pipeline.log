@@ -120,3 +120,19 @@
 
 [2026-03-29 17:22:14] SCHEDULER: Ciclo 1 completado OK.
 [2026-03-29 17:22:14] SCHEDULER: Proxima ejecucion en 60 minutos.
+[2026-03-29 18:22:14] SCHEDULER: === CICLO 2 INICIADO ===
+[2026-03-29 18:22:16] === INICIO SCRAPING ===
+[2026-03-29 18:22:16] Nicho: GAMING
+[2026-03-29 18:22:22]   + DarkPlayer Gaming TV: LIFE IS STRANGE REUNION Juego Completo | Game | 10,163 vistas
+[2026-03-29 18:22:26] Nicho: MODA
+[2026-03-29 18:22:33] Nicho: FITNESS
+[2026-03-29 18:22:39] Nicho: TECNOLOGIA
+[2026-03-29 18:22:44] Nuevos registros guardados: 1
+[2026-03-29 18:22:44] === FIN SCRAPING ===
+
+[2026-03-29 18:22:44] === GENERANDO DASHBOARD ===
+[2026-03-29 18:22:45] Dashboard generado: dashboard.html
+[2026-03-29 18:22:45] === FIN DASHBOARD ===
+
+[2026-03-29 18:22:45] SCHEDULER: Ciclo 2 completado OK.
+[2026-03-29 18:22:45] SCHEDULER: Proxima ejecucion en 60 minutos.
