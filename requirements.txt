@@ -12,3 +12,9 @@ uvicorn
 pydantic
 streamlit
 requests
+matplotlib
+
+# Testing & Linting
+pytest
+pytest-cov
+ruff
