@@ -1,0 +1,15 @@
+[
+  "tests/test_atribucion.py::TestAnonimizarEmail::test_devuelve_hash_sha256",
+  "tests/test_atribucion.py::TestAnonimizarEmail::test_emails_distintos_hashes_distintos",
+  "tests/test_atribucion.py::TestAnonimizarEmail::test_none_devuelve_none",
+  "tests/test_atribucion.py::TestAnonimizarEmail::test_normaliza_case_y_espacios",
+  "tests/test_atribucion.py::TestAtribucionProbabilistica::test_impacto_mas_cercano_gana",
+  "tests/test_atribucion.py::TestAtribucionProbabilistica::test_sin_vistas_resultado_vacio",
+  "tests/test_atribucion.py::TestAtribucionProbabilistica::test_tipo_probabilistico_sin_click",
+  "tests/test_atribucion.py::TestAtribucionProbabilistica::test_venta_dentro_ventana_se_atribuye",
+  "tests/test_atribucion.py::TestAtribucionProbabilistica::test_venta_fuera_ventana_no_se_atribuye",
+  "tests/test_atribucion.py::TestMetricasRentabilidad::test_canal_sin_presupuesto_devuelve_nan",
+  "tests/test_atribucion.py::TestMetricasRentabilidad::test_cpa_correcto",
+  "tests/test_atribucion.py::TestMetricasRentabilidad::test_roi_cero_cuando_ventas_igual_inversion",
+  "tests/test_atribucion.py::TestMetricasRentabilidad::test_roi_negativo_cuando_ventas_menor_inversion"
+]

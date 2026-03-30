@@ -1,3 +1,16 @@
+"""
+db.py — DEPRECADO. Usar database.py para PostgreSQL.
+
+Este módulo con SQLite se conserva temporalmente para no romper
+importaciones existentes. Migrar a database.py en el próximo sprint.
+"""
+import warnings
+warnings.warn(
+    "db.py (SQLite) está deprecado. Usar database.py (PostgreSQL).",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 import sqlite3
 
 conn = sqlite3.connect("data.db", check_same_thread=False)
@@ -37,22 +50,20 @@ def insert_conversion(user_id, value, timestamp):
 def get_data():
     cursor.execute("SELECT * FROM events")
     events = cursor.fetchall()
-
     cursor.execute("SELECT * FROM conversions")
     conversions = cursor.fetchall()
-
     return {
         "events": [
-            {"device_id": e[0], "campaign_id": e[1], "timestamp": parse_dt(e[2])}
+            {"device_id": e[0], "campaign_id": e[1], "timestamp": _parse_dt(e[2])}
             for e in events
         ],
         "conversions": [
-            {"user_id": c[0], "value": c[1], "timestamp": parse_dt(c[2])}
+            {"user_id": c[0], "value": c[1], "timestamp": _parse_dt(c[2])}
             for c in conversions
-        ]
+        ],
     }
 
 
-def parse_dt(dt):
+def _parse_dt(dt):
     from datetime import datetime
     return datetime.fromisoformat(dt)

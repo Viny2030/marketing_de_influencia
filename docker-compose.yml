@@ -4,25 +4,43 @@ services:
   db:
     container_name: marketing_db
     image: postgres:15
+    restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: marketing_db
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-marketing_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-marketing_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   api:
     container_name: marketing_api
     build: .
-    command: uvicorn app:app --host 0.0.0.0 --port 8000
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy   # espera a que Postgres esté listo
     environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/marketing_db
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-marketing_db}
+      - BUDGET_YOUTUBE=${BUDGET_YOUTUBE:-1500}
+      - BUDGET_INSTAGRAM=${BUDGET_INSTAGRAM:-800}
+      - BUDGET_GOOGLE_ADS=${BUDGET_GOOGLE_ADS:-1200}
+      - BUDGET_FACEBOOK=${BUDGET_FACEBOOK:-900}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   dashboard:
     container_name: marketing_dashboard
@@ -31,7 +49,10 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy   # espera a que la API esté lista
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-marketing_db}
 
 volumes:
-  postgres_data:api
+  postgres_data: {}

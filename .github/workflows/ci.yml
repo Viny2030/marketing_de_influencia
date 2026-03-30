@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, "feat/**", "fix/**"]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    name: Tests & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov ruff
+
+      - name: Lint (ruff)
+        run: ruff check . --select E,F,W --ignore E501
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short --cov=. --cov-report=term-missing
+
+      - name: Verify no cite: artifacts in code
+        run: |
+          if grep -rn "\[cite:" --include="*.py" .; then
+            echo "❌ Se encontraron artefactos [cite:] en código Python"
+            exit 1
+          fi
+          echo "✅ Sin artefactos cite: en el código"
