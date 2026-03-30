@@ -45,7 +45,7 @@ services:
   dashboard:
     container_name: marketing_dashboard
     build: .
-    command: streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0
+    command: command: streamlit run visualizador_interfaz.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
     depends_on:
