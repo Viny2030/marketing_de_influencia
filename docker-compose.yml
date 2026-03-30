@@ -35,4 +35,4 @@ services:
       - api
 
 volumes:
-  postgres_data:
+  postgres_data: {}
