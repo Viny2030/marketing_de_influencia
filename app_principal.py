@@ -1,12 +1,13 @@
 """
-app.py — API REST de atribución de marketing con FastAPI.
+app_principal.py — API REST de atribución de marketing con FastAPI.
 
 Endpoints:
-  GET /           → estado general
-  GET /health     → healthcheck (DB + versión)
+  GET /               → estado general
+  GET /health         → healthcheck (DB + versión)
   GET /api/v1/metrics → métricas de ROI por canal
 """
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 from config import PRESUPUESTOS, DATABASE_URL
@@ -14,15 +15,34 @@ from database import get_engine, check_connection
 from atributtion import calcular_metricas_rentabilidad
 
 app = FastAPI(
-    title="InflueMetric Attribution API",
+    title="InfluMetric Attribution API",
     version="1.0.0",
     description="API de atribución de marketing de influencia",
 )
 
+# ── CORS ───────────────────────────────────────────────────────────────────────
+# Permite que el dashboard HTML (servido localmente o desde otro origen)
+# pueda consumir la API desde el browser sin bloquearse.
+# En producción, reemplazar allow_origins=["*"] por el dominio real del frontend.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def home():
-    return {"message": "API de Atribución Operativa", "status": "success", "version": "1.0.0"}
+    return {
+        "message": "API de Atribución Operativa",
+        "status": "success",
+        "version": "1.0.0",
+        "docs": "/docs",
+    }
 
 
 @app.get("/health")
