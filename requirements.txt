@@ -1,43 +1,22 @@
-# ── Análisis y procesamiento de datos ────────────────────────────────────────
 pandas>=2.0
 numpy>=1.24
 openpyxl>=3.1
 
-# ── Extracción de datos (sin APIs oficiales) ──────────────────────────────────
 yt-dlp>=2024.1.1
 
-# ── Base de datos ─────────────────────────────────────────────────────────────
 sqlalchemy>=2.0
 psycopg2-binary>=2.9
 
-<<<<<<< HEAD
-# Testing & Linting
-pytest
-pytest-cov
-ruff
-sqlalchemy
-=======
-# ── API REST ──────────────────────────────────────────────────────────────────
 fastapi>=0.111
 uvicorn>=0.29
 pydantic>=2.0
 
-# ── Visualización ─────────────────────────────────────────────────────────────
 plotly>=5.0
 matplotlib>=3.8
 
-# ── Dashboard interactivo (opcional — no requerido para tests) ────────────────
-# Instalar manualmente si se usa: pip install streamlit
-# streamlit>=1.33
-
-# ── Variables de entorno ──────────────────────────────────────────────────────
 python-dotenv>=1.0
-
-# ── HTTP ──────────────────────────────────────────────────────────────────────
 requests>=2.31
 
-# ── Testing y linting ─────────────────────────────────────────────────────────
 pytest>=8.0
 pytest-cov>=5.0
 ruff>=0.4
->>>>>>> f953c0cd1b515dd96232b77f29db6de26f56f015
