@@ -33,6 +33,7 @@ def cargar_datos() -> tuple[pd.DataFrame, str]:
     try:
         df = pd.read_csv("ventas.csv")
         df.columns = [c.strip() for c in df.columns]
+        # Columnas ya tienen nombres correctos en ventas.csv
         # Normalizar nombres de columna al esquema esperado
         rename_map = {}
         for col in df.columns:

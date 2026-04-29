@@ -39,8 +39,8 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 30s
 
   dashboard:
     container_name: marketing_dashboard
@@ -48,9 +48,6 @@ services:
     command: streamlit run visualizador_interfaz.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
-    depends_on:
-      api:
-        condition: service_healthy   # espera a que la API esté lista
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-marketing_db}
 
