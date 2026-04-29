@@ -1,2 +1,47 @@
-# Created by pytest automatically.
-*
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Entorno virtual ───────────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env          # ← credenciales reales, NUNCA commitear
+
+# ── Runtime del pipeline ──────────────────────────────────────────────────────
+# Estos archivos se generan al correr el proyecto; no forman parte del código.
+pipeline.log
+datos_scraped.csv
+canales_descubiertos.csv
+reporte_roi_final.csv
+
+# ── Base de datos local (SQLite legacy) ───────────────────────────────────────
+data.db
+*.db
+
+# ── Proceso scheduler ─────────────────────────────────────────────────────────
+scheduler.pid
+*.pid
+
+# ── Archivos de sistema / herramientas ────────────────────────────────────────
+CACHEDIR.TAG
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
