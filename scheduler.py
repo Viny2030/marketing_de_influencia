@@ -1,46 +1,57 @@
 """
-Loop infinito que corre pipeline.py cada hora.
-Correr en background: python scheduler.py &
-Ver logs: tail -f pipeline.log
-Detener: kill $(cat scheduler.pid)
+scheduler.py — Loop que corre el pipeline automáticamente cada hora.
+
+Uso:
+  Correr en background:  python scheduler.py &
+  Ver logs:              tail -f pipeline.log
+  Detener:               kill $(cat scheduler.pid)
+
+Cambios respecto a la versión anterior:
+  - Importa paso_scraping() y paso_dashboard() directamente en vez de
+    lanzar un subproceso. Más rápido, menos frágil, sin dependencia del PATH.
+  - Intervalo configurable desde config.py / variable de entorno SCRAPER_INTERVAL.
 """
-import time
-import subprocess
 import os
+import time
+import traceback
 from datetime import datetime
 
-PID_FILE = "scheduler.pid"
-INTERVALO = 3600  # 1 hora en segundos
+from config import SCRAPER_INTERVAL_SECONDS
+from pipeline import paso_dashboard, paso_scraping
 
-def log(msg):
+PID_FILE = "scheduler.pid"
+
+# ── Logging ────────────────────────────────────────────────────────────────────
+
+def log(msg: str) -> None:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     linea = f"[{ts}] SCHEDULER: {msg}"
     print(linea)
     with open("pipeline.log", "a", encoding="utf-8") as f:
         f.write(linea + "\n")
 
-# Guardar PID para poder matarlo despues
+
+# ── PID ────────────────────────────────────────────────────────────────────────
+
 with open(PID_FILE, "w") as f:
     f.write(str(os.getpid()))
 
 log(f"Scheduler iniciado. PID: {os.getpid()}")
-log(f"Ciclo cada {INTERVALO//60} minutos.")
+log(f"Ciclo cada {SCRAPER_INTERVAL_SECONDS // 60} minutos.")
+
+# ── Loop principal ─────────────────────────────────────────────────────────────
 
 ciclo = 1
 while True:
     log(f"=== CICLO {ciclo} INICIADO ===")
     try:
-        resultado = subprocess.run(
-            ["python", "pipeline.py"],
-            capture_output=True, text=True, encoding="utf-8"
-        )
-        if resultado.returncode == 0:
-            log(f"Ciclo {ciclo} completado OK.")
-        else:
-            log(f"Ciclo {ciclo} con errores: {resultado.stderr[:200]}")
-    except Exception as e:
-        log(f"Error ejecutando pipeline: {e}")
+        paso_scraping()
+        paso_dashboard()
+        log(f"Ciclo {ciclo} completado OK.")
+    except Exception:
+        # Captura cualquier excepción sin matar el scheduler
+        log(f"Ciclo {ciclo} con errores:\n{traceback.format_exc()}")
 
-    log(f"Proxima ejecucion en {INTERVALO//60} minutos.")
+    log(f"Próxima ejecución en {SCRAPER_INTERVAL_SECONDS // 60} minutos.")
     ciclo += 1
-    time.sleep(INTERVALO)
+    time.sleep(SCRAPER_INTERVAL_SECONDS)
