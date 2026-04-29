@@ -24,7 +24,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov ruff
 
       - name: Lint (ruff)
         run: ruff check . --select E,F,W --ignore E501
@@ -33,7 +32,9 @@ jobs:
         run: |
           pytest tests/ -v --tb=short --cov=. --cov-report=term-missing
 
-      - name: Verify no cite: artifacts in code
+      # ⚠️  El nombre tenía "cite:" sin comillas → YAML lo interpretaba como
+      #     una clave de mapping y rompía el workflow completo.
+      - name: "Verify no [cite:] artifacts in code"
         run: |
           if grep -rn "\[cite:" --include="*.py" .; then
             echo "❌ Se encontraron artefactos [cite:] en código Python"
