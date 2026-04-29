@@ -27,16 +27,20 @@ PRESUPUESTOS: dict[str, float] = {
 
 # ── Nichos y keywords de búsqueda ─────────────────────────────────────────────
 # Fuente única de verdad: pipeline.py y scraper_discovery.py importan desde aquí.
+# 7 nichos × ~3-4 keywords × 5 videos ≈ 100-140 registros por ciclo (~8-10 min)
 NICHOS: dict[str, list[str]] = {
-    "gaming":     ["gaming latino", "gameplay español", "review juegos", "esports latam"],
-    "moda":       ["moda argentina", "outfit ideas español", "fashion haul latam"],
-    "fitness":    ["rutina gym español", "ejercicios en casa", "nutricion deportiva"],
-    "tecnologia": ["review celulares 2025", "tecnologia español", "unboxing tech latam"],
+    "gaming":          ["gaming latino", "gameplay español", "review juegos", "esports latam"],
+    "moda":            ["moda argentina", "outfit ideas español", "fashion haul latam"],
+    "fitness":         ["rutina gym español", "ejercicios en casa", "nutricion deportiva"],
+    "tecnologia":      ["review celulares 2025", "tecnologia español", "unboxing tech latam"],
+    "cocina":          ["recetas faciles español", "cocina casera latina", "meal prep español"],
+    "entretenimiento": ["vlogs latinos", "challenge español", "reaccion videos"],
+    "finanzas":        ["finanzas personales español", "invertir dinero latam", "ahorro tips"],
 }
 
 # ── Scraper ────────────────────────────────────────────────────────────────────
 SCRAPER_INTERVAL_SECONDS: int = int(os.getenv("SCRAPER_INTERVAL", "3600"))
-MAX_RESULTADOS_POR_KEYWORD: int = int(os.getenv("MAX_POR_KEYWORD", "3"))
+MAX_RESULTADOS_POR_KEYWORD: int = int(os.getenv("MAX_POR_KEYWORD", "5"))
 LINKS_FILE: str = os.getenv("LINKS_FILE", "links.txt")
 ARCHIVO_CSV: str = os.getenv("ARCHIVO_CSV", "datos_scraped.csv")
 ARCHIVO_HTML: str = os.getenv("ARCHIVO_HTML", "dashboard.html")
