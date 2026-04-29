@@ -11,16 +11,17 @@ sqlalchemy>=2.0
 psycopg2-binary>=2.9
 
 # ── API REST ──────────────────────────────────────────────────────────────────
-fastapi>=0.110
-uvicorn[standard]>=0.29
+fastapi>=0.111
+uvicorn>=0.29
 pydantic>=2.0
 
 # ── Visualización ─────────────────────────────────────────────────────────────
-plotly>=5.20
+plotly>=5.0
 matplotlib>=3.8
 
-# ── Dashboard interactivo (opcional) ─────────────────────────────────────────
-streamlit>=1.33
+# ── Dashboard interactivo (opcional — no requerido para tests) ────────────────
+# Instalar manualmente si se usa: pip install streamlit
+# streamlit>=1.33
 
 # ── Variables de entorno ──────────────────────────────────────────────────────
 python-dotenv>=1.0
